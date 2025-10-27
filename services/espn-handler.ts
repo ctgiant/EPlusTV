@@ -117,6 +117,14 @@ export interface IEspnPlusMeta {
   hide_studio?: boolean;
   zip_code?: string;
   in_market_teams?: string;
+  espn1?: boolean;
+  espn2?: boolean;
+  espnu?: boolean;
+  sec?: boolean;
+  acc?: boolean;
+  espnews?: boolean;
+  espndeportes?: boolean;
+  espnonabc?: boolean;
 }
 
 export interface IEspnMeta {
@@ -511,6 +519,14 @@ class EspnHandler {
           in_market_teams: '',
           use_ppv: useEspnPpv,
           zip_code: '',
+          espn1: false,
+          espn2: false,
+          espnu: false,
+          sec: false,
+          acc: false,
+          espnews: false,
+          espndeportes: false,
+          espnonabc: false,
         },
         name: 'espnplus',
         tokens: data,
@@ -691,164 +707,320 @@ class EspnHandler {
     }
   };
 
+  // public getSchedule = async (): Promise<void> => {
+  //   const espnPlusEnabled = await isEnabled('plus');
+  //   const espnPpvEnabled = await isEnabled('ppv');
+  //   const espnLinearEnabled = await isEnabled('linear');
+  //   const secPlusEnabled = await isEnabled('sec_plus');
+  //   const espn3Enabled = await isEnabled('espn3');
+  //   const accnxEnabled = await isEnabled('accnx');
+  //   const espnFreeEnabled = await isEnabled('espn_free');
+
+  //   const {linear_channels} = await db.providers.findOneAsync<IProvider>({name: 'espn'});
+
+  //   const isChannelEnabled = (channelId: string): boolean =>
+  //     espnLinearEnabled && linear_channels.some(c => c.id === channelId && c.enabled);
+
+  //   let entries = [];
+
+  //   try {
+  //     /*if (espnPlusEnabled) {
+  //       console.log('Looking for ESPN+ events...');
+
+  //       const liveEntries = await this.getLiveEvents();
+  //       entries = [...entries, ...liveEntries];
+  //     }*/
+
+  //     if (espnLinearEnabled) {
+  //       console.log('Looking for ESPN events');
+  //     }
+
+  //     if (isChannelEnabled('espn1')) {
+  //       const liveEntries = await this.getLiveEvents('espn1');
+  //       entries = [...entries, ...liveEntries];
+  //     }
+  //     if (isChannelEnabled('espn2')) {
+  //       const liveEntries = await this.getLiveEvents('espn2');
+  //       entries = [...entries, ...liveEntries];
+  //     }
+  //     if (espn3Enabled) {
+  //       const liveEntries = await this.getLiveEvents('espn3');
+  //       entries = [...entries, ...liveEntries];
+  //     }
+  //     if (isChannelEnabled('espnu')) {
+  //       const liveEntries = await this.getLiveEvents('espnU');
+  //       entries = [...entries, ...liveEntries];
+  //     }
+  //     if (isChannelEnabled('sec')) {
+  //       const liveEntries = await this.getLiveEvents('secn');
+  //       entries = [...entries, ...liveEntries];
+  //     }
+  //     if (secPlusEnabled) {
+  //       const liveEntries = await this.getLiveEvents('secnPlus');
+  //       entries = [...entries, ...liveEntries];
+  //     }
+  //     if (isChannelEnabled('acc')) {
+  //       const liveEntries = await this.getLiveEvents('accn');
+  //       entries = [...entries, ...liveEntries];
+  //     }
+  //     if (accnxEnabled) {
+  //       const liveEntries = await this.getLiveEvents('accnx');
+  //       entries = [...entries, ...liveEntries];
+  //     }
+  //     if (isChannelEnabled('espnews')) {
+  //       const liveEntries = await this.getLiveEvents('espnews');
+  //       entries = [...entries, ...liveEntries];
+  //     }
+  //     if (isChannelEnabled('espndeportes')) {
+  //       const liveEntries = await this.getLiveEvents('espndeportes');
+  //       entries = [...entries, ...liveEntries];
+  //     }
+  //     if (isChannelEnabled('espnonabc')) {
+  //       const liveEntries = await this.getLiveEvents('espnonabc');
+  //       entries = [...entries, ...liveEntries];
+  //     }
+  //     if (espnFreeEnabled) {
+  //       const liveEntries = await this.getLiveEvents('espn_free');
+  //       entries = [...entries, ...liveEntries];
+  //     }
+  //     if (espnPpvEnabled) {
+  //       const liveEntries = await this.getLiveEvents('espn_ppv');
+  //       entries = [...entries, ...liveEntries];
+  //     }
+  //   } catch (e) {
+  //     console.log('Could not parse ESPN events');
+  //   }
+
+  //   const today = new Date();
+
+  //   for (const [i] of [0, 1, 2].entries()) {
+  //     const date = moment(today).add(i, 'days');
+
+  //     try {
+  //       /*if (espnPlusEnabled) {
+  //         const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'));
+  //         entries = [...entries, ...upcomingEntries];
+  //       }*/
+  //       if (isChannelEnabled('espn1')) {
+  //         const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'espn1');
+  //         entries = [...entries, ...upcomingEntries];
+  //       }
+  //       if (isChannelEnabled('espn2')) {
+  //         const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'espn2');
+  //         entries = [...entries, ...upcomingEntries];
+  //       }
+  //       if (espn3Enabled) {
+  //         const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'espn3');
+  //         entries = [...entries, ...upcomingEntries];
+  //       }
+  //       if (isChannelEnabled('espnu')) {
+  //         const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'espnU');
+  //         entries = [...entries, ...upcomingEntries];
+  //       }
+  //       if (isChannelEnabled('sec')) {
+  //         const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'secn');
+  //         entries = [...entries, ...upcomingEntries];
+  //       }
+  //       if (secPlusEnabled) {
+  //         const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'secnPlus');
+  //         entries = [...entries, ...upcomingEntries];
+  //       }
+  //       if (isChannelEnabled('acc')) {
+  //         const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'accn');
+  //         entries = [...entries, ...upcomingEntries];
+  //       }
+  //       if (accnxEnabled) {
+  //         const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'accnx');
+  //         entries = [...entries, ...upcomingEntries];
+  //       }
+  //       if (isChannelEnabled('espnews')) {
+  //         const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'espnews');
+  //         entries = [...entries, ...upcomingEntries];
+  //       }
+  //       if (isChannelEnabled('espndeportes')) {
+  //         const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'espndeportes');
+  //         entries = [...entries, ...upcomingEntries];
+  //       }
+  //       if (isChannelEnabled('espnonabc')) {
+  //         const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'espnonabc');
+  //         entries = [...entries, ...upcomingEntries];
+  //       }
+  //       if (espnFreeEnabled) {
+  //         const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'espn_free');
+  //         entries = [...entries, ...upcomingEntries];
+  //       }
+  //       if (espnPpvEnabled) {
+  //         const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'espn_ppv');
+  //         entries = [...entries, ...upcomingEntries];
+  //       }
+  //     } catch (e) {
+  //       console.log('Could not parse ESPN events');
+  //     }
+  //   }
+
+  //   try {
+  //     await parseAirings(entries);
+  //   } catch (e) {
+  //     console.log('Could not parse events');
+  //     console.log(e.message);
+  //   }
+  // };
   public getSchedule = async (): Promise<void> => {
-    const espnPlusEnabled = await isEnabled('plus');
-    const espnPpvEnabled = await isEnabled('ppv');
-    const espnLinearEnabled = await isEnabled('linear');
-    const secPlusEnabled = await isEnabled('sec_plus');
-    const espn3Enabled = await isEnabled('espn3');
-    const accnxEnabled = await isEnabled('accnx');
-    const espnFreeEnabled = await isEnabled('espn_free');
+  const espnPlusEnabled = await isEnabled('plus');
+  const espnPpvEnabled = await isEnabled('ppv');
+  const espnLinearEnabled = await isEnabled('linear');
+  const secPlusEnabled = await isEnabled('sec_plus');
+  const espn3Enabled = await isEnabled('espn3');
+  const accnxEnabled = await isEnabled('accnx');
+  const espnFreeEnabled = await isEnabled('espn_free');
 
-    const {linear_channels} = await db.providers.findOneAsync<IProvider>({name: 'espn'});
+  const {linear_channels} = await db.providers.findOneAsync<IProvider>({name: 'espn'});
+  
+  // Get ESPN Plus linear channel settings
+  const {meta: plusMeta} = await db.providers.findOneAsync<IProvider<TESPNPlusTokens, IEspnPlusMeta>>({
+    name: 'espnplus',
+  });
 
-    const isChannelEnabled = (channelId: string): boolean =>
-      espnLinearEnabled && linear_channels.some(c => c.id === channelId && c.enabled);
+  const isChannelEnabled = (channelId: string): boolean =>
+    espnLinearEnabled && linear_channels.some(c => c.id === channelId && c.enabled);
+  
+  // Check if ESPN Plus has this linear channel enabled
+  const isPlusChannelEnabled = (channelId: string): boolean =>
+    espnPlusEnabled && plusMeta?.[channelId] === true;
 
-    let entries = [];
+  let entries = [];
+
+  try {
+    if (espnLinearEnabled) {
+      console.log('Looking for ESPN events');
+    }
+
+    if (isChannelEnabled('espn1') || isPlusChannelEnabled('espn1')) {
+      const liveEntries = await this.getLiveEvents('espn1');
+      entries = [...entries, ...liveEntries];
+    }
+    if (isChannelEnabled('espn2') || isPlusChannelEnabled('espn2')) {
+      const liveEntries = await this.getLiveEvents('espn2');
+      entries = [...entries, ...liveEntries];
+    }
+    if (espn3Enabled) {
+      const liveEntries = await this.getLiveEvents('espn3');
+      entries = [...entries, ...liveEntries];
+    }
+    if (isChannelEnabled('espnu') || isPlusChannelEnabled('espnu')) {
+      const liveEntries = await this.getLiveEvents('espnU');
+      entries = [...entries, ...liveEntries];
+    }
+    if (isChannelEnabled('sec') || isPlusChannelEnabled('sec')) {
+      const liveEntries = await this.getLiveEvents('secn');
+      entries = [...entries, ...liveEntries];
+    }
+    if (secPlusEnabled) {
+      const liveEntries = await this.getLiveEvents('secnPlus');
+      entries = [...entries, ...liveEntries];
+    }
+    if (isChannelEnabled('acc') || isPlusChannelEnabled('acc')) {
+      const liveEntries = await this.getLiveEvents('accn');
+      entries = [...entries, ...liveEntries];
+    }
+    if (accnxEnabled) {
+      const liveEntries = await this.getLiveEvents('accnx');
+      entries = [...entries, ...liveEntries];
+    }
+    if (isChannelEnabled('espnews') || isPlusChannelEnabled('espnews')) {
+      const liveEntries = await this.getLiveEvents('espnews');
+      entries = [...entries, ...liveEntries];
+    }
+    if (isChannelEnabled('espndeportes') || isPlusChannelEnabled('espndeportes')) {
+      const liveEntries = await this.getLiveEvents('espndeportes');
+      entries = [...entries, ...liveEntries];
+    }
+    if (isChannelEnabled('espnonabc') || isPlusChannelEnabled('espnonabc')) {
+      const liveEntries = await this.getLiveEvents('espnonabc');
+      entries = [...entries, ...liveEntries];
+    }
+    if (espnFreeEnabled) {
+      const liveEntries = await this.getLiveEvents('espn_free');
+      entries = [...entries, ...liveEntries];
+    }
+    if (espnPpvEnabled) {
+      const liveEntries = await this.getLiveEvents('espn_ppv');
+      entries = [...entries, ...liveEntries];
+    }
+  } catch (e) {
+    console.log('Could not parse ESPN events');
+  }
+
+  const today = new Date();
+
+  for (const [i] of [0, 1, 2].entries()) {
+    const date = moment(today).add(i, 'days');
 
     try {
-      /*if (espnPlusEnabled) {
-        console.log('Looking for ESPN+ events...');
-
-        const liveEntries = await this.getLiveEvents();
-        entries = [...entries, ...liveEntries];
-      }*/
-
-      if (espnLinearEnabled) {
-        console.log('Looking for ESPN events');
+      if (isChannelEnabled('espn1') || isPlusChannelEnabled('espn1')) {
+        const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'espn1');
+        entries = [...entries, ...upcomingEntries];
       }
-
-      if (isChannelEnabled('espn1')) {
-        const liveEntries = await this.getLiveEvents('espn1');
-        entries = [...entries, ...liveEntries];
-      }
-      if (isChannelEnabled('espn2')) {
-        const liveEntries = await this.getLiveEvents('espn2');
-        entries = [...entries, ...liveEntries];
+      if (isChannelEnabled('espn2') || isPlusChannelEnabled('espn2')) {
+        const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'espn2');
+        entries = [...entries, ...upcomingEntries];
       }
       if (espn3Enabled) {
-        const liveEntries = await this.getLiveEvents('espn3');
-        entries = [...entries, ...liveEntries];
+        const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'espn3');
+        entries = [...entries, ...upcomingEntries];
       }
-      if (isChannelEnabled('espnu')) {
-        const liveEntries = await this.getLiveEvents('espnU');
-        entries = [...entries, ...liveEntries];
+      if (isChannelEnabled('espnu') || isPlusChannelEnabled('espnu')) {
+        const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'espnU');
+        entries = [...entries, ...upcomingEntries];
       }
-      if (isChannelEnabled('sec')) {
-        const liveEntries = await this.getLiveEvents('secn');
-        entries = [...entries, ...liveEntries];
+      if (isChannelEnabled('sec') || isPlusChannelEnabled('sec')) {
+        const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'secn');
+        entries = [...entries, ...upcomingEntries];
       }
       if (secPlusEnabled) {
-        const liveEntries = await this.getLiveEvents('secnPlus');
-        entries = [...entries, ...liveEntries];
+        const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'secnPlus');
+        entries = [...entries, ...upcomingEntries];
       }
-      if (isChannelEnabled('acc')) {
-        const liveEntries = await this.getLiveEvents('accn');
-        entries = [...entries, ...liveEntries];
+      if (isChannelEnabled('acc') || isPlusChannelEnabled('acc')) {
+        const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'accn');
+        entries = [...entries, ...upcomingEntries];
       }
       if (accnxEnabled) {
-        const liveEntries = await this.getLiveEvents('accnx');
-        entries = [...entries, ...liveEntries];
+        const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'accnx');
+        entries = [...entries, ...upcomingEntries];
       }
-      if (isChannelEnabled('espnews')) {
-        const liveEntries = await this.getLiveEvents('espnews');
-        entries = [...entries, ...liveEntries];
+      if (isChannelEnabled('espnews') || isPlusChannelEnabled('espnews')) {
+        const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'espnews');
+        entries = [...entries, ...upcomingEntries];
       }
-      if (isChannelEnabled('espndeportes')) {
-        const liveEntries = await this.getLiveEvents('espndeportes');
-        entries = [...entries, ...liveEntries];
+      if (isChannelEnabled('espndeportes') || isPlusChannelEnabled('espndeportes')) {
+        const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'espndeportes');
+        entries = [...entries, ...upcomingEntries];
       }
-      if (isChannelEnabled('espnonabc')) {
-        const liveEntries = await this.getLiveEvents('espnonabc');
-        entries = [...entries, ...liveEntries];
+      if (isChannelEnabled('espnonabc') || isPlusChannelEnabled('espnonabc')) {
+        const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'espnonabc');
+        entries = [...entries, ...upcomingEntries];
       }
       if (espnFreeEnabled) {
-        const liveEntries = await this.getLiveEvents('espn_free');
-        entries = [...entries, ...liveEntries];
+        const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'espn_free');
+        entries = [...entries, ...upcomingEntries];
       }
       if (espnPpvEnabled) {
-        const liveEntries = await this.getLiveEvents('espn_ppv');
-        entries = [...entries, ...liveEntries];
+        const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'espn_ppv');
+        entries = [...entries, ...upcomingEntries];
       }
     } catch (e) {
       console.log('Could not parse ESPN events');
     }
+  }
 
-    const today = new Date();
-
-    for (const [i] of [0, 1, 2].entries()) {
-      const date = moment(today).add(i, 'days');
-
-      try {
-        /*if (espnPlusEnabled) {
-          const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'));
-          entries = [...entries, ...upcomingEntries];
-        }*/
-        if (isChannelEnabled('espn1')) {
-          const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'espn1');
-          entries = [...entries, ...upcomingEntries];
-        }
-        if (isChannelEnabled('espn2')) {
-          const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'espn2');
-          entries = [...entries, ...upcomingEntries];
-        }
-        if (espn3Enabled) {
-          const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'espn3');
-          entries = [...entries, ...upcomingEntries];
-        }
-        if (isChannelEnabled('espnu')) {
-          const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'espnU');
-          entries = [...entries, ...upcomingEntries];
-        }
-        if (isChannelEnabled('sec')) {
-          const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'secn');
-          entries = [...entries, ...upcomingEntries];
-        }
-        if (secPlusEnabled) {
-          const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'secnPlus');
-          entries = [...entries, ...upcomingEntries];
-        }
-        if (isChannelEnabled('acc')) {
-          const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'accn');
-          entries = [...entries, ...upcomingEntries];
-        }
-        if (accnxEnabled) {
-          const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'accnx');
-          entries = [...entries, ...upcomingEntries];
-        }
-        if (isChannelEnabled('espnews')) {
-          const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'espnews');
-          entries = [...entries, ...upcomingEntries];
-        }
-        if (isChannelEnabled('espndeportes')) {
-          const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'espndeportes');
-          entries = [...entries, ...upcomingEntries];
-        }
-        if (isChannelEnabled('espnonabc')) {
-          const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'espnonabc');
-          entries = [...entries, ...upcomingEntries];
-        }
-        if (espnFreeEnabled) {
-          const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'espn_free');
-          entries = [...entries, ...upcomingEntries];
-        }
-        if (espnPpvEnabled) {
-          const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'espn_ppv');
-          entries = [...entries, ...upcomingEntries];
-        }
-      } catch (e) {
-        console.log('Could not parse ESPN events');
-      }
-    }
-
-    try {
-      await parseAirings(entries);
-    } catch (e) {
-      console.log('Could not parse events');
-      console.log(e.message);
-    }
-  };
+  try {
+    await parseAirings(entries);
+  } catch (e) {
+    console.log('Could not parse events');
+    console.log(e.message);
+  }
+};
 
   public getEventData = async (eventId: string): Promise<TChannelPlaybackInfo> => {
     const espnPlusEnabled = await isEnabled('plus');

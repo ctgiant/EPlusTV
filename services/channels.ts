@@ -22,70 +22,295 @@ export const CHANNELS = {
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   get MAP() {
     return {
+      // 0: {
+      //   checkChannelEnabled: () => checkChannelEnabled('espn', 'espn1'),
+      //   id: 'espn1',
+      //   logo: 'https://tmsimg.fancybits.co/assets/s32645_h3_aa.png?w=360&h=270',
+      //   name: 'ESPN',
+      //   stationId: '32645',
+      //   tvgName: 'ESPNHD',
+      // },
+      // 1: {
+      //   checkChannelEnabled: () => checkChannelEnabled('espn', 'espn2'),
+      //   id: 'espn2',
+      //   logo: 'https://tmsimg.fancybits.co/assets/s45507_ll_h15_aa.png?w=360&h=270',
+      //   name: 'ESPN2',
+      //   stationId: '45507',
+      //   tvgName: 'ESPN2HD',
+      // },
+      // 2: {
+      //   checkChannelEnabled: () => checkChannelEnabled('espn', 'espnu'),
+      //   id: 'espnu',
+      //   logo: 'https://tmsimg.fancybits.co/assets/s60696_ll_h15_aa.png?w=360&h=270',
+      //   name: 'ESPNU',
+      //   stationId: '60696',
+      //   tvgName: 'ESPNUHD',
+      // },
+      // 3: {
+      //   checkChannelEnabled: () => checkChannelEnabled('espn', 'sec'),
+      //   id: 'sec',
+      //   logo: 'https://tmsimg.fancybits.co/assets/s89714_ll_h15_aa.png?w=360&h=270',
+      //   name: 'SEC Network',
+      //   stationId: '89714',
+      //   tvgName: 'SECH',
+      // },
+      // 4: {
+      //   checkChannelEnabled: () => checkChannelEnabled('espn', 'acc'),
+      //   id: 'acc',
+      //   logo: 'https://tmsimg.fancybits.co/assets/s111871_ll_h15_ac.png?w=360&h=270',
+      //   name: 'ACC Network',
+      //   stationId: '111871',
+      //   tvgName: 'ACC',
+      // },
+      // 5: {
+      //   checkChannelEnabled: () => checkChannelEnabled('espn', 'espnews'),
+      //   id: 'espnews',
+      //   logo: 'https://tmsimg.fancybits.co/assets/s59976_ll_h15_aa.png?w=360&h=270',
+      //   name: 'ESPNews',
+      //   stationId: '59976',
+      //   tvgName: 'ESPNWHD',
+      // },
+      // 6: {
+      //   checkChannelEnabled: () => checkChannelEnabled('espn', 'espndeportes'),
+      //   id: 'espndeportes',
+      //   logo: 'https://tmsimg.fancybits.co/assets/s71914_ll_h15_aa.png?w=360&h=270',
+      //   name: 'ESPN Deportes',
+      //   stationId: '71914',
+      //   tvgName: 'ESPNDHD',
+      // },
+      // 7: {
+      //   checkChannelEnabled: () => checkChannelEnabled('espn', 'espnonabc'),
+      //   id: 'espnonabc',
+      //   logo: 'https://tmsimg.fancybits.co/assets/s28708_ll_h15_aa.png?w=360&h=270',
+      //   name: 'ESPN on ABC',
+      //   stationId: '28708',
+      //   tvgName: 'ESPNONABC',
+      // },
       0: {
-        checkChannelEnabled: () => checkChannelEnabled('espn', 'espn1'),
         id: 'espn1',
-        logo: 'https://tmsimg.fancybits.co/assets/s32645_h3_aa.png?w=360&h=270',
         name: 'ESPN',
+        logo: 'https://tmsimg.fancybits.co/assets/s32645_h3_aa.png?w=360&h=270',
         stationId: '32645',
         tvgName: 'ESPNHD',
+        checkChannelEnabled: async () => {
+          const espn = await db.providers.findOneAsync({ name: 'espn' });
+          const espnplus = await db.providers.findOneAsync({ name: 'espnplus' });
+
+          const meta = espnplus?.meta || {};
+          const chosen = meta.espn1_provider || 'auto';
+
+          if (chosen === 'espn') {
+            return espn?.linear_channels?.some(c => c.id === 'espn1' && c.enabled);
+          }
+
+          if (chosen === 'espnplus') {
+            return espnplus?.meta?.espn1 === true;
+          }
+
+          // Default: auto mode (either source)
+          return (
+            (espn?.linear_channels?.some(c => c.id === 'espn1' && c.enabled)) ||
+            (espnplus?.meta?.espn1 === true)
+          );
+        },
       },
       1: {
-        checkChannelEnabled: () => checkChannelEnabled('espn', 'espn2'),
         id: 'espn2',
-        logo: 'https://tmsimg.fancybits.co/assets/s45507_ll_h15_aa.png?w=360&h=270',
         name: 'ESPN2',
+        logo: 'https://tmsimg.fancybits.co/assets/s45507_ll_h15_aa.png?w=360&h=270',
         stationId: '45507',
         tvgName: 'ESPN2HD',
+        checkChannelEnabled: async () => {
+          const espn = await db.providers.findOneAsync({ name: 'espn' });
+          const espnplus = await db.providers.findOneAsync({ name: 'espnplus' });
+
+          const meta = espnplus?.meta || {};
+          const chosen = meta.espn2_provider || 'auto';
+
+          if (chosen === 'espn') {
+            return espn?.linear_channels?.some(c => c.id === 'espn2' && c.enabled);
+          }
+
+          if (chosen === 'espnplus') {
+            return espnplus?.meta?.espn2 === true;
+          }
+
+          // Default: auto mode (either source)
+          return (
+            (espn?.linear_channels?.some(c => c.id === 'espn2' && c.enabled)) ||
+            (espnplus?.meta?.espn1 === true)
+          );
+        },
       },
       2: {
-        checkChannelEnabled: () => checkChannelEnabled('espn', 'espnu'),
         id: 'espnu',
-        logo: 'https://tmsimg.fancybits.co/assets/s60696_ll_h15_aa.png?w=360&h=270',
         name: 'ESPNU',
+        logo: 'https://tmsimg.fancybits.co/assets/s60696_ll_h15_aa.png?w=360&h=270',
         stationId: '60696',
         tvgName: 'ESPNUHD',
+        checkChannelEnabled: async () => {
+          const espn = await db.providers.findOneAsync({ name: 'espn' });
+          const espnplus = await db.providers.findOneAsync({ name: 'espnplus' });
+
+          const meta = espnplus?.meta || {};
+          const chosen = meta.espnu_provider || 'auto';
+
+          if (chosen === 'espn') {
+            return espn?.linear_channels?.some(c => c.id === 'espnu' && c.enabled);
+          }
+
+          if (chosen === 'espnplus') {
+            return espnplus?.meta?.espnu === true;
+          }
+
+          // Default: auto mode (either source)
+          return (
+            (espn?.linear_channels?.some(c => c.id === 'espnu' && c.enabled)) ||
+            (espnplus?.meta?.espnu === true)
+          );
+        },
       },
       3: {
-        checkChannelEnabled: () => checkChannelEnabled('espn', 'sec'),
         id: 'sec',
-        logo: 'https://tmsimg.fancybits.co/assets/s89714_ll_h15_aa.png?w=360&h=270',
         name: 'SEC Network',
+        logo: 'https://tmsimg.fancybits.co/assets/s89714_ll_h15_aa.png?w=360&h=270',
         stationId: '89714',
         tvgName: 'SECH',
+        checkChannelEnabled: async () => {
+          const espn = await db.providers.findOneAsync({ name: 'espn' });
+          const espnplus = await db.providers.findOneAsync({ name: 'espnplus' });
+
+          const meta = espnplus?.meta || {};
+          const chosen = meta.sec_provider || 'auto';
+
+          if (chosen === 'espn') {
+            return espn?.linear_channels?.some(c => c.id === 'sec' && c.enabled);
+          }
+
+          if (chosen === 'espnplus') {
+            return espnplus?.meta?.sec === true;
+          }
+
+          // Default: auto mode (either source)
+          return (
+            (espn?.linear_channels?.some(c => c.id === 'sec' && c.enabled)) ||
+            (espnplus?.meta?.sec === true)
+          );
+        },
       },
       4: {
-        checkChannelEnabled: () => checkChannelEnabled('espn', 'acc'),
         id: 'acc',
-        logo: 'https://tmsimg.fancybits.co/assets/s111871_ll_h15_ac.png?w=360&h=270',
         name: 'ACC Network',
+        logo: 'https://tmsimg.fancybits.co/assets/s111871_ll_h15_ac.png?w=360&h=270',
         stationId: '111871',
         tvgName: 'ACC',
+        checkChannelEnabled: async () => {
+          const espn = await db.providers.findOneAsync({ name: 'espn' });
+          const espnplus = await db.providers.findOneAsync({ name: 'espnplus' });
+
+          const meta = espnplus?.meta || {};
+          const chosen = meta.acc_provider || 'auto';
+
+          if (chosen === 'acc') {
+            return espn?.linear_channels?.some(c => c.id === 'acc' && c.enabled);
+          }
+
+          if (chosen === 'espnplus') {
+            return espnplus?.meta?.acc === true;
+          }
+
+          // Default: auto mode (either source)
+          return (
+            (espn?.linear_channels?.some(c => c.id === 'acc' && c.enabled)) ||
+            (espnplus?.meta?.acc === true)
+          );
+        },
       },
       5: {
-        checkChannelEnabled: () => checkChannelEnabled('espn', 'espnews'),
         id: 'espnews',
-        logo: 'https://tmsimg.fancybits.co/assets/s59976_ll_h15_aa.png?w=360&h=270',
         name: 'ESPNews',
+        logo: 'https://tmsimg.fancybits.co/assets/s59976_ll_h15_aa.png?w=360&h=270',
         stationId: '59976',
         tvgName: 'ESPNWHD',
+        checkChannelEnabled: async () => {
+          const espn = await db.providers.findOneAsync({ name: 'espn' });
+          const espnplus = await db.providers.findOneAsync({ name: 'espnplus' });
+
+          const meta = espnplus?.meta || {};
+          const chosen = meta.espnews_provider || 'auto';
+
+          if (chosen === 'espnews') {
+            return espn?.linear_channels?.some(c => c.id === 'espnews' && c.enabled);
+          }
+
+          if (chosen === 'espnplus') {
+            return espnplus?.meta?.espnews === true;
+          }
+
+          // Default: auto mode (either source)
+          return (
+            (espn?.linear_channels?.some(c => c.id === 'espnews' && c.enabled)) ||
+            (espnplus?.meta?.espnews === true)
+          );
+        },
       },
       6: {
-        checkChannelEnabled: () => checkChannelEnabled('espn', 'espndeportes'),
         id: 'espndeportes',
-        logo: 'https://tmsimg.fancybits.co/assets/s71914_ll_h15_aa.png?w=360&h=270',
         name: 'ESPN Deportes',
+        logo: 'https://tmsimg.fancybits.co/assets/s71914_ll_h15_aa.png?w=360&h=270',
         stationId: '71914',
         tvgName: 'ESPNDHD',
+        checkChannelEnabled: async () => {
+          const espn = await db.providers.findOneAsync({ name: 'espn' });
+          const espnplus = await db.providers.findOneAsync({ name: 'espnplus' });
+
+          const meta = espnplus?.meta || {};
+          const chosen = meta.espndeportes_provider || 'auto';
+
+          if (chosen === 'espndeportes') {
+            return espn?.linear_channels?.some(c => c.id === 'espndeportes' && c.enabled);
+          }
+
+          if (chosen === 'espnplus') {
+            return espnplus?.meta?.espndeportes === true;
+          }
+
+          // Default: auto mode (either source)
+          return (
+            (espn?.linear_channels?.some(c => c.id === 'espndeportes' && c.enabled)) ||
+            (espnplus?.meta?.espndeportes === true)
+          );
+        },
       },
       7: {
-        checkChannelEnabled: () => checkChannelEnabled('espn', 'espnonabc'),
         id: 'espnonabc',
-        logo: 'https://tmsimg.fancybits.co/assets/s28708_ll_h15_aa.png?w=360&h=270',
         name: 'ESPN on ABC',
+        logo: 'https://tmsimg.fancybits.co/assets/s28708_ll_h15_aa.png?w=360&h=270',
         stationId: '28708',
         tvgName: 'ESPNONABC',
+        checkChannelEnabled: async () => {
+          const espn = await db.providers.findOneAsync({ name: 'espn' });
+          const espnplus = await db.providers.findOneAsync({ name: 'espnplus' });
+
+          const meta = espnplus?.meta || {};
+          const chosen = meta.espnonabc_provider || 'auto';
+
+          if (chosen === 'espnonabc') {
+            return espn?.linear_channels?.some(c => c.id === 'espnonabc' && c.enabled);
+          }
+
+          if (chosen === 'espnplus') {
+            return espnplus?.meta?.espnonabc === true;
+          }
+
+          // Default: auto mode (either source)
+          return (
+            (espn?.linear_channels?.some(c => c.id === 'espnonabc' && c.enabled)) ||
+            (espnplus?.meta?.espnonabc === true)
+          );
+        },
       },
+
       10: {
         checkChannelEnabled: () => checkChannelEnabled('foxsports', 'fs1'),
         id: 'fs1',

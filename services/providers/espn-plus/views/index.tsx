@@ -103,7 +103,7 @@ export const ESPNPlus: FC = async () => {
           </details>
         </div>
         <div id="espnplus-body" hx-swap="innerHTML">
-          <ESPNPlusBody enabled={enabled} tokens={tokens} />
+          <ESPNPlusBody enabled={enabled} tokens={tokens} meta={meta} />
         </div>
         <script
           dangerouslySetInnerHTML={{
