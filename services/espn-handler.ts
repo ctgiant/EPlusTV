@@ -117,6 +117,8 @@ export interface IEspnPlusMeta {
   hide_studio?: boolean;
   zip_code?: string;
   in_market_teams?: string;
+
+  // Linear channel flags
   espn1?: boolean;
   espn2?: boolean;
   espnu?: boolean;
@@ -125,7 +127,25 @@ export interface IEspnPlusMeta {
   espnews?: boolean;
   espndeportes?: boolean;
   espnonabc?: boolean;
+
+  // Provider preference flags
+  espn1_provider?: 'auto' | 'espn' | 'espnplus';
+  espn2_provider?: 'auto' | 'espn' | 'espnplus';
+  espnu_provider?: 'auto' | 'espn' | 'espnplus';
+  sec_provider?: 'auto' | 'espn' | 'espnplus';
+  acc_provider?: 'auto' | 'espn' | 'espnplus';
+  espnews_provider?: 'auto' | 'espn' | 'espnplus';
+  espndeportes_provider?: 'auto' | 'espn' | 'espnplus';
+  espnonabc_provider?: 'auto' | 'espn' | 'espnplus';
+
+  // Digital network access flags — now shared with ESPN TVE
+  espn_free?: boolean;
+  espn3?: boolean;
+  sec_plus?: boolean;
+  accnx?: boolean;
+  espn3isp?: boolean;
 }
+
 
 export interface IEspnMeta {
   sec_plus?: boolean;
@@ -377,106 +397,147 @@ const parseCategories = event => {
 
 const parseAirings = async events => {
   const useLinear = await usesLinear();
-
   const [now, endSchedule] = normalTimeRange();
 
-  const {meta: plusMeta} = await db.providers.findOneAsync<IProvider<TESPNPlusTokens, IEspnPlusMeta>>({
+  const { meta: plusMeta } = await db.providers.findOneAsync<IProvider<TESPNPlusTokens, IEspnPlusMeta>>({
     name: 'espnplus',
   });
 
   const in_market_team_filter =
-    plusMeta?.in_market_teams && plusMeta?.in_market_teams.length > 0 ? plusMeta?.in_market_teams.split(',') : [];
-    
+    plusMeta?.in_market_teams && plusMeta?.in_market_teams.length > 0
+      ? plusMeta?.in_market_teams.split(',')
+      : [];
+
   const in_market_feed_filter =
-    plusMeta?.in_market_teams && plusMeta?.in_market_teams.length > 0 ? plusMeta?.in_market_teams.split(',').map(item => {
-    const words = item.trim().split(' ');
-    return words.length > 0 ? words[words.length - 1] : ''; 
-  }) : [];
+    plusMeta?.in_market_teams && plusMeta?.in_market_teams.length > 0
+      ? plusMeta?.in_market_teams.split(',').map(item => {
+          const words = item.trim().split(' ');
+          return words.length > 0 ? words[words.length - 1] : '';
+        })
+      : [];
 
   for (const event of events) {
-    const entryExists = await db.entries.findOneAsync<IEntry>({id: event.id});
+    const entryExists = await db.entries.findOneAsync<IEntry>({ id: event.id });
+    if (entryExists) continue;
 
-    if (!entryExists) {
-      const isLinear = useLinear && event.network?.id && LINEAR_NETWORKS.some(n => n === event.network?.id);
+    const isLinear =
+      useLinear && event.network?.id && LINEAR_NETWORKS.some(n => n === event.network?.id);
 
-      if (!isLinear && plusMeta?.hide_studio && event.program?.isStudio) {
+    // Skip studio shows for non-linear if configured
+    if (!isLinear && plusMeta?.hide_studio && event.program?.isStudio) continue;
+
+    const start = moment(event.startDateTime);
+    const end = moment(event.startDateTime).add(event.duration, 'seconds');
+    const originalEnd = moment(end);
+
+    if (!isLinear) end.add(1, 'hour');
+    if (end.isBefore(now) || start.isAfter(endSchedule)) continue;
+
+    // Filter out in-market team events if applicable
+    if (
+      event.network?.id === 'bam_dtc' &&
+      in_market_team_filter.some(tn => event.name.indexOf(tn) > -1)
+    ) {
+      const feeds = events.filter(obj => obj.name === event.name && obj.start === event.start);
+      if (feeds.length > 1 || in_market_feed_filter.some(tn => event.feedName.indexOf(tn) > -1)) {
         continue;
       }
-
-      const start = moment(event.startDateTime);
-      const end = moment(event.startDateTime).add(event.duration, 'seconds');
-      const originalEnd = moment(end);
-
-      if (!isLinear) {
-        end.add(1, 'hour');
-      }
-
-      if (end.isBefore(now) || start.isAfter(endSchedule)) {
-        continue;
-      }
-
-      if (event.network?.id === 'bam_dtc' && in_market_team_filter.some(tn => event.name.indexOf(tn) > -1)) {
-        const feeds = events.filter((obj) => obj.name === event.name && obj.start === event.start);
-        if (feeds.length > 1 || in_market_feed_filter.some(tn => event.feedName.indexOf(tn) > -1)) {
-          continue;
-        }
-      }
-
-      console.log('Adding event: ', event.name);
-
-      await db.entries.insertAsync<IEntry>({
-        categories: parseCategories(event),
-        duration: end.diff(start, 'seconds'),
-        end: end.valueOf(),
-        feed: event.feedName,
-        from: 'espn',
-        id: event.id,
-        image: event.image?.url,
-        name: event.name,
-        network: event.network?.name || 'ESPN+',
-        sport: event.subcategory?.name,
-        start: start.valueOf(),
-        url: event.source?.url,
-        ...(isLinear && {
-          channel: event.network?.id,
-          linear: true,
-        }),
-        originalEnd: originalEnd.valueOf(),
-      });
     }
+
+    // --- Determine correct digital network name for ESPN+ ---
+    let networkName = event.network?.name || 'ESPN+';
+    const netId = (event.network?.id || '').toLowerCase();
+
+    if (!isLinear) {
+      // Map meta flags directly
+      if (plusMeta?.sec_plus && netId === 'sec_plus') {
+        networkName = 'SEC Network +';
+      } else if (plusMeta?.accnx && netId === 'accnx') {
+        networkName = 'ACC Network Extra';
+      } else if (plusMeta?.espn3 && netId === 'espn3') {
+        networkName = 'ESPN3';
+      } else if (plusMeta?.espn_free && netId === 'espn_free') {
+        networkName = '@ESPN';
+      }
+    }
+
+    // --- Build display name with proper suffix (only for non-linear ESPN+) ---
+    let displayName = (event.name || 'Unknown Event').trim();
+    if (!isLinear && !new RegExp(`\\b${networkName}\\b`, 'i').test(displayName)) {
+      displayName = `${displayName} - ${networkName}`;
+    }
+
+
+    console.log('Adding event:', displayName);
+
+    await db.entries.insertAsync<IEntry>({
+      categories: parseCategories(event),
+      duration: end.diff(start, 'seconds'),
+      end: end.valueOf(),
+      feed: event.feedName,
+      from: 'espn',
+      id: event.id,
+      image: event.image?.url,
+      name: displayName,
+      network: networkName,
+      sport: event.subcategory?.name,
+      start: start.valueOf(),
+      url: event.source?.url,
+      ...(isLinear && {
+        channel: event.network?.id,
+        linear: true,
+      }),
+      originalEnd: originalEnd.valueOf(),
+    });
   }
 };
+
 
 const isEnabled = async (which?: string): Promise<boolean> => {
-  const {enabled: espnPlusEnabled, meta: plusMeta} = await db.providers.findOneAsync<
-    IProvider<TESPNPlusTokens, IEspnPlusMeta>
-  >({name: 'espnplus'});
-  const {
-    enabled: espnLinearEnabled,
-    linear_channels,
-    meta: linearMeta,
-  } = await db.providers.findOneAsync<IProvider<TESPNTokens, IEspnMeta>>({name: 'espn'});
+  const espnPlus = await db.providers.findOneAsync<IProvider<TESPNPlusTokens, IEspnPlusMeta>>({
+    name: 'espnplus',
+  });
+  const espn = await db.providers.findOneAsync<IProvider<TESPNTokens, IEspnMeta>>({
+    name: 'espn',
+  });
 
-  if (which === 'linear') {
-    return espnLinearEnabled && _.some(linear_channels, c => c.enabled);
-  } else if (which === 'plus') {
-    return espnPlusEnabled;
-  } else if (which === 'ppv') {
-    return (plusMeta?.use_ppv ? true : false) && espnPlusEnabled;
-  } else if (which === 'espn3') {
-    return (linearMeta?.espn3 ? true : false) && espnLinearEnabled;
-  } else if (which === 'espn3isp') {
-    return (linearMeta?.espn3isp ? true : false) && espnLinearEnabled;
-  } else if (which === 'sec_plus') {
-    return (linearMeta?.sec_plus ? true : false) && espnLinearEnabled;
-  } else if (which === 'accnx') {
-    return (linearMeta?.accnx ? true : false) && espnLinearEnabled;
-  } else if (which === 'espn_free') {
-    return (linearMeta?.espn_free ? true : false) && espnLinearEnabled;
+  const espnPlusEnabled = espnPlus?.enabled ?? false;
+  const plusMeta = espnPlus?.meta ?? {};
+
+  const espnLinearEnabled = espn?.enabled ?? false;
+  const linearMeta = espn?.meta ?? {};
+  const linearChannels = espn?.linear_channels ?? [];
+
+  // Helper to check toggle state for both providers
+  const toggleActive = (key: string): boolean => {
+    return Boolean(plusMeta?.[key] || linearMeta?.[key]);
+  };
+
+  switch (which) {
+    case 'linear':
+      return espnLinearEnabled && _.some(linearChannels, c => c.enabled);
+    case 'plus':
+      return espnPlusEnabled;
+    case 'ppv':
+      return espnPlusEnabled && Boolean(plusMeta?.use_ppv);
+    case 'espn3':
+      return (toggleActive('espn3') && (espnPlusEnabled || espnLinearEnabled));
+    case 'espn3isp':
+      return (toggleActive('espn3isp') && (espnPlusEnabled || espnLinearEnabled));
+    case 'sec_plus':
+      return (toggleActive('sec_plus') && (espnPlusEnabled || espnLinearEnabled));
+    case 'accnx':
+      return (toggleActive('accnx') && (espnPlusEnabled || espnLinearEnabled));
+    case 'espn_free':
+      return (toggleActive('espn_free') && (espnPlusEnabled || espnLinearEnabled));
+    default:
+      return (
+        espnPlusEnabled ||
+        (espnLinearEnabled && _.some(linearChannels, c => c.enabled))
+      );
   }
-
-  return espnPlusEnabled || (espnLinearEnabled && _.some(linear_channels, c => c.enabled));
 };
+
 
 class EspnHandler {
   public tokens?: ITokens;
@@ -866,161 +927,109 @@ class EspnHandler {
   //   }
   // };
   public getSchedule = async (): Promise<void> => {
-  const espnPlusEnabled = await isEnabled('plus');
-  const espnPpvEnabled = await isEnabled('ppv');
-  const espnLinearEnabled = await isEnabled('linear');
-  const secPlusEnabled = await isEnabled('sec_plus');
-  const espn3Enabled = await isEnabled('espn3');
-  const accnxEnabled = await isEnabled('accnx');
-  const espnFreeEnabled = await isEnabled('espn_free');
+    const espnPlusEnabled = await isEnabled('plus');
+    const espnLinearEnabled = await isEnabled('linear');
+    const espn3Enabled = await isEnabled('espn3');
+    const secPlusEnabled = await isEnabled('sec_plus');
+    const accnxEnabled = await isEnabled('accnx');
+    const espnFreeEnabled = await isEnabled('espn_free');
+    const espnPpvEnabled = await isEnabled('ppv');
 
-  const {linear_channels} = await db.providers.findOneAsync<IProvider>({name: 'espn'});
-  
-  // Get ESPN Plus linear channel settings
-  const {meta: plusMeta} = await db.providers.findOneAsync<IProvider<TESPNPlusTokens, IEspnPlusMeta>>({
-    name: 'espnplus',
-  });
+    const { linear_channels } = await db.providers.findOneAsync<IProvider>({ name: 'espn' });
+    const { meta: plusMeta } = (await db.providers.findOneAsync<IProvider<TESPNPlusTokens, IEspnPlusMeta>>({ name: 'espnplus' })) || {};
 
-  const isChannelEnabled = (channelId: string): boolean =>
-    espnLinearEnabled && linear_channels.some(c => c.id === channelId && c.enabled);
-  
-  // Check if ESPN Plus has this linear channel enabled
-  const isPlusChannelEnabled = (channelId: string): boolean =>
-    espnPlusEnabled && plusMeta?.[channelId] === true;
+    const isLinearChannelEnabled = (id: string) =>
+      espnLinearEnabled && linear_channels?.some(c => c.id === id && c.enabled);
 
-  let entries = [];
+    const isPlusChannelEnabled = (id: string) =>
+      espnPlusEnabled && plusMeta?.[id] === true;
 
-  try {
-    if (espnLinearEnabled) {
-      console.log('Looking for ESPN events');
-    }
+    const channels = [
+      ['espn1', 'espn1'],
+      ['espn2', 'espn2'],
+      ['espn3', 'espn3'],
+      ['espnu', 'espnU'],
+      ['sec', 'secn'],
+      ['sec_plus', 'secnPlus'],
+      ['acc', 'accn'],
+      ['accnx', 'accnx'],
+      ['espnews', 'espnews'],
+      ['espndeportes', 'espndeportes'],
+      ['espnonabc', 'espnonabc'],
+      ['espn_free', 'espn_free'],
+      ['espn_ppv', 'espn_ppv'],
+    ] as const;
 
-    if (isChannelEnabled('espn1') || isPlusChannelEnabled('espn1')) {
-      const liveEntries = await this.getLiveEvents('espn1');
-      entries = [...entries, ...liveEntries];
-    }
-    if (isChannelEnabled('espn2') || isPlusChannelEnabled('espn2')) {
-      const liveEntries = await this.getLiveEvents('espn2');
-      entries = [...entries, ...liveEntries];
-    }
-    if (espn3Enabled) {
-      const liveEntries = await this.getLiveEvents('espn3');
-      entries = [...entries, ...liveEntries];
-    }
-    if (isChannelEnabled('espnu') || isPlusChannelEnabled('espnu')) {
-      const liveEntries = await this.getLiveEvents('espnU');
-      entries = [...entries, ...liveEntries];
-    }
-    if (isChannelEnabled('sec') || isPlusChannelEnabled('sec')) {
-      const liveEntries = await this.getLiveEvents('secn');
-      entries = [...entries, ...liveEntries];
-    }
-    if (secPlusEnabled) {
-      const liveEntries = await this.getLiveEvents('secnPlus');
-      entries = [...entries, ...liveEntries];
-    }
-    if (isChannelEnabled('acc') || isPlusChannelEnabled('acc')) {
-      const liveEntries = await this.getLiveEvents('accn');
-      entries = [...entries, ...liveEntries];
-    }
-    if (accnxEnabled) {
-      const liveEntries = await this.getLiveEvents('accnx');
-      entries = [...entries, ...liveEntries];
-    }
-    if (isChannelEnabled('espnews') || isPlusChannelEnabled('espnews')) {
-      const liveEntries = await this.getLiveEvents('espnews');
-      entries = [...entries, ...liveEntries];
-    }
-    if (isChannelEnabled('espndeportes') || isPlusChannelEnabled('espndeportes')) {
-      const liveEntries = await this.getLiveEvents('espndeportes');
-      entries = [...entries, ...liveEntries];
-    }
-    if (isChannelEnabled('espnonabc') || isPlusChannelEnabled('espnonabc')) {
-      const liveEntries = await this.getLiveEvents('espnonabc');
-      entries = [...entries, ...liveEntries];
-    }
-    if (espnFreeEnabled) {
-      const liveEntries = await this.getLiveEvents('espn_free');
-      entries = [...entries, ...liveEntries];
-    }
-    if (espnPpvEnabled) {
-      const liveEntries = await this.getLiveEvents('espn_ppv');
-      entries = [...entries, ...liveEntries];
-    }
-  } catch (e) {
-    console.log('Could not parse ESPN events');
-  }
+    let entries: any[] = [];
 
-  const today = new Date();
+    // --- Fetch events ---
+    const today = new Date();
 
-  for (const [i] of [0, 1, 2].entries()) {
-    const date = moment(today).add(i, 'days');
+    const fetchProviderEvents = async (provider: 'espn' | 'espnplus') => {
+      for (const [id, gqlId] of channels) {
+        const channelActive =
+          (provider === 'espn' && isLinearChannelEnabled(id)) ||
+          (provider === 'espnplus' && isPlusChannelEnabled(id)) ||
+          (provider === 'espnplus' && (
+            (id === 'espn3' && espn3Enabled) ||
+            (id === 'sec_plus' && secPlusEnabled) ||
+            (id === 'accnx' && accnxEnabled) ||
+            (id === 'espn_free' && espnFreeEnabled)
+          ));
+
+        if (!channelActive) continue;
+
+        console.log(`Fetching ${gqlId} from ${provider === 'espnplus' ? 'ESPN+' : 'ESPN TVE'}`);
+
+        // LIVE
+        const live = await this.getLiveEvents(gqlId);
+        entries.push(...live.map(e => ({ ...e, _provider: provider })));
+
+        // UPCOMING
+        for (const [i] of [0, 1, 2].entries()) {
+          const date = moment(today).add(i, 'days').format('YYYY-MM-DD');
+          const upcoming = await this.getUpcomingEvents(date, gqlId);
+          entries.push(...upcoming.map(e => ({ ...e, _provider: provider })));
+        }
+      }
+    };
 
     try {
-      if (isChannelEnabled('espn1') || isPlusChannelEnabled('espn1')) {
-        const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'espn1');
-        entries = [...entries, ...upcomingEntries];
-      }
-      if (isChannelEnabled('espn2') || isPlusChannelEnabled('espn2')) {
-        const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'espn2');
-        entries = [...entries, ...upcomingEntries];
-      }
-      if (espn3Enabled) {
-        const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'espn3');
-        entries = [...entries, ...upcomingEntries];
-      }
-      if (isChannelEnabled('espnu') || isPlusChannelEnabled('espnu')) {
-        const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'espnU');
-        entries = [...entries, ...upcomingEntries];
-      }
-      if (isChannelEnabled('sec') || isPlusChannelEnabled('sec')) {
-        const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'secn');
-        entries = [...entries, ...upcomingEntries];
-      }
-      if (secPlusEnabled) {
-        const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'secnPlus');
-        entries = [...entries, ...upcomingEntries];
-      }
-      if (isChannelEnabled('acc') || isPlusChannelEnabled('acc')) {
-        const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'accn');
-        entries = [...entries, ...upcomingEntries];
-      }
-      if (accnxEnabled) {
-        const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'accnx');
-        entries = [...entries, ...upcomingEntries];
-      }
-      if (isChannelEnabled('espnews') || isPlusChannelEnabled('espnews')) {
-        const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'espnews');
-        entries = [...entries, ...upcomingEntries];
-      }
-      if (isChannelEnabled('espndeportes') || isPlusChannelEnabled('espndeportes')) {
-        const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'espndeportes');
-        entries = [...entries, ...upcomingEntries];
-      }
-      if (isChannelEnabled('espnonabc') || isPlusChannelEnabled('espnonabc')) {
-        const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'espnonabc');
-        entries = [...entries, ...upcomingEntries];
-      }
-      if (espnFreeEnabled) {
-        const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'espn_free');
-        entries = [...entries, ...upcomingEntries];
-      }
-      if (espnPpvEnabled) {
-        const upcomingEntries = await this.getUpcomingEvents(date.format('YYYY-MM-DD'), 'espn_ppv');
-        entries = [...entries, ...upcomingEntries];
-      }
-    } catch (e) {
-      console.log('Could not parse ESPN events');
+      if (espnLinearEnabled) await fetchProviderEvents('espn');
+      if (espnPlusEnabled) await fetchProviderEvents('espnplus');
+    } catch (err) {
+      console.log('Error fetching ESPN events:', err);
     }
-  }
 
-  try {
-    await parseAirings(entries);
-  } catch (e) {
-    console.log('Could not parse events');
-    console.log(e.message);
-  }
-};
+    // --- Deduplicate ---
+    const seen = new Map<string, any>();
+    for (const ev of entries) {
+      const existing = seen.get(ev.id);
+      if (!existing) {
+        seen.set(ev.id, ev);
+      } else {
+        // Prefer ESPN+ if TVE doesn’t exist
+        if (existing._provider === 'espn' && ev._provider === 'espnplus') {
+          seen.set(ev.id, ev);
+        }
+      }
+    }
+
+    const finalEntries = [...seen.values()];
+
+    try {
+      await removeEntriesNetwork('ESPN+');
+      await removeEntriesNetwork('ESPN TVE');
+      await parseAirings(finalEntries);
+    } catch (err) {
+      console.log('Could not parse final events:', err);
+    }
+
+    console.log(`Scheduled ${finalEntries.length} entries total...`);
+  };
+
+
+
 
   public getEventData = async (eventId: string): Promise<TChannelPlaybackInfo> => {
     const espnPlusEnabled = await isEnabled('plus');
@@ -1732,3 +1741,5 @@ export type TESPNPlusTokens = Omit<ClassTypeWithoutMethods<EspnHandler>, 'adobe_
 export type TESPNTokens = Pick<ClassTypeWithoutMethods<EspnHandler>, 'adobe_device_id' | 'adobe_auth'>;
 
 export const espnHandler = new EspnHandler();
+export type IMergedEspnMeta = IEspnMeta & IEspnPlusMeta;
+

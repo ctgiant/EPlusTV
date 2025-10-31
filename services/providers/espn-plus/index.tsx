@@ -88,6 +88,33 @@ espnplus.put('/channels/toggle/:channelId', async c => {
   const body = await c.req.parseBody();
   const enabled = body['channel-enabled'] === 'on';
 
+// Global provider source selection
+espnplus.put('/channels/source', async c => {
+  const body = await c.req.parseBody();
+  const providerChoice = (body['channel-source'] as string)?.toLowerCase() ?? 'auto';
+
+  const validChoices = ['auto', 'espn', 'espnplus'];
+  if (!validChoices.includes(providerChoice)) {
+    return c.text('Invalid provider choice', 400);
+  }
+
+  const updateFields: Record<string, any> = {};
+  const channels = ['espn1', 'espn2', 'espnu', 'sec', 'acc', 'espnews', 'espndeportes', 'espnonabc'];
+  for (const ch of channels) {
+    updateFields[`meta.${ch}_provider`] = providerChoice;
+  }
+
+  await db.providers.updateAsync(
+    { name: 'espnplus' },
+    { $set: updateFields }
+  );
+
+  return c.html(<></>, 200, {
+    'HX-Trigger': `{"HXToast":{"type":"success","body":"Global provider source set to ${providerChoice.toUpperCase()}"}}`,
+  });
+});
+
+
   // === Channel source selection route (TVE vs ESPN+) ===
 espnplus.put('/channels/source/:channelId', async c => {
   const channelId = c.req.param('channelId');

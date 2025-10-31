@@ -6,11 +6,11 @@ interface ILoginProps {
   code?: string;
 }
 
-export const Login: FC<ILoginProps> = async ({ code }) => {
+export const LoginTVE: FC<ILoginProps> = async ({ code }) => {
   let shownCode = code;
 
   if (!shownCode) {
-    shownCode = await espnHandler.getPlusAuthCode();
+    shownCode = await espnHandler.getLinearAuthCode();
   }
 
   return (
@@ -18,11 +18,11 @@ export const Login: FC<ILoginProps> = async ({ code }) => {
       hx-target="this"
       hx-swap="outerHTML"
       hx-trigger="every 5s"
-      hx-get={`/providers/espn/plus/login/check/${shownCode}`}
+      hx-get={`/providers/espn/tve-login/${shownCode}`}
     >
       <div class="grid-container">
         <div>
-          <h5>ESPN+ Login:</h5>
+          <h5>ESPN TVE Login:</h5>
           <span>
             Open this link and follow instructions:
             <br />

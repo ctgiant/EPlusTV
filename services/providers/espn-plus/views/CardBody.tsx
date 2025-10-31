@@ -28,6 +28,28 @@ export const ESPNPlusBody: FC<IESPNPlusBodyProps> = ({enabled, tokens, meta, ope
             <th scope="col">Name</th>
           </tr>
         </thead>
+        <thead>
+          <tr>
+            <th colSpan={2}>
+              <label>
+                All Channels Source:&nbsp;
+                <select
+                  hx-put="/providers/espnplus/channels/source"
+                  hx-trigger="change"
+                  name="channel-source"
+                >
+                  <option value="auto" selected>Auto</option>
+                  <option value="espnplus">ESPN+</option>
+                  <option value="espn">TV Provider</option>
+                </select>
+              </label>
+            </th>
+          </tr>
+          <tr>
+            <th></th>
+            <th scope="col">Name</th>
+          </tr>
+        </thead>
         <tbody>
           <tr>
             <td>
@@ -41,15 +63,6 @@ export const ESPNPlusBody: FC<IESPNPlusBodyProps> = ({enabled, tokens, meta, ope
                 hx-trigger="change"
                 name="channel-enabled"
               />
-              <select
-                hx-put={`/providers/espnplus/channels/source/espn1`}
-                hx-trigger="change"
-                name="channel-source"
-              >
-              <option value="auto" selected>Auto</option>
-              <option value="espnplus">ESPN+</option>
-              <option value="espn">TV Provider</option>
-              </select>
             </td>
             <td>ESPN</td>
           </tr>
@@ -65,15 +78,6 @@ export const ESPNPlusBody: FC<IESPNPlusBodyProps> = ({enabled, tokens, meta, ope
                 hx-trigger="change"
                 name="channel-enabled"
               />
-              <select
-                hx-put={`/providers/espnplus/channels/source/espn2`}
-                hx-trigger="change"
-                name="channel-source"
-              >
-              <option value="auto" selected>Auto</option>
-              <option value="espnplus">ESPN+</option>
-              <option value="espn">TV Provider</option>
-              </select>
             </td>
             <td>ESPN2</td>
           </tr>
@@ -89,15 +93,6 @@ export const ESPNPlusBody: FC<IESPNPlusBodyProps> = ({enabled, tokens, meta, ope
                 hx-trigger="change"
                 name="channel-enabled"
               />
-              <select
-                hx-put={`/providers/espnplus/channels/source/espnu`}
-                hx-trigger="change"
-                name="channel-source"
-              >
-              <option value="auto" selected>Auto</option>
-              <option value="espnplus">ESPN+</option>
-              <option value="espn">TV Provider</option>
-              </select>
             </td>
             <td>ESPNU</td>
           </tr>
@@ -113,15 +108,6 @@ export const ESPNPlusBody: FC<IESPNPlusBodyProps> = ({enabled, tokens, meta, ope
                 hx-trigger="change"
                 name="channel-enabled"
               />
-              <select
-                hx-put={`/providers/espnplus/channels/source/sec`}
-                hx-trigger="change"
-                name="channel-source"
-              >
-              <option value="auto" selected>Auto</option>
-              <option value="espnplus">ESPN+</option>
-              <option value="espn">TV Provider</option>
-              </select>
             </td>
             <td>SEC Network</td>
           </tr>
@@ -137,11 +123,6 @@ export const ESPNPlusBody: FC<IESPNPlusBodyProps> = ({enabled, tokens, meta, ope
                 hx-trigger="change"
                 name="channel-enabled"
               />
-              <select
-                hx-put={`/providers/espnplus/channels/source/acc`}
-                hx-trigger="change"
-                name="channel-source"
-              ></select>
             </td>
             <td>ACC Network</td>
           </tr>
@@ -157,15 +138,6 @@ export const ESPNPlusBody: FC<IESPNPlusBodyProps> = ({enabled, tokens, meta, ope
                 hx-trigger="change"
                 name="channel-enabled"
               />
-              <select
-                hx-put={`/providers/espnplus/channels/source/espnews`}
-                hx-trigger="change"
-                name="channel-source"
-              >
-              <option value="auto" selected>Auto</option>
-              <option value="espnplus">ESPN+</option>
-              <option value="espn">TV Provider</option>
-              </select>
             </td>
             <td>ESPNews</td>
           </tr>
@@ -181,15 +153,6 @@ export const ESPNPlusBody: FC<IESPNPlusBodyProps> = ({enabled, tokens, meta, ope
                 hx-trigger="change"
                 name="channel-enabled"
               />
-              <select
-                hx-put={`/providers/espnplus/channels/source/espndeportes`}
-                hx-trigger="change"
-                name="channel-source"
-              >
-              <option value="auto" selected>Auto</option>
-              <option value="espnplus">ESPN+</option>
-              <option value="espn">TV Provider</option>
-              </select>
             </td>
             <td>ESPN Deportes</td>
           </tr>
@@ -205,15 +168,6 @@ export const ESPNPlusBody: FC<IESPNPlusBodyProps> = ({enabled, tokens, meta, ope
                 hx-trigger="change"
                 name="channel-enabled"
               />
-              <select
-                hx-put={`/providers/espnplus/channels/source/espnonabc`}
-                hx-trigger="change"
-                name="channel-source"
-              >
-              <option value="auto" selected>Auto</option>
-              <option value="espnplus">ESPN+</option>
-              <option value="espn">TV Provider</option>
-              </select>
             </td>
             <td>ESPN on ABC</td>
           </tr>
