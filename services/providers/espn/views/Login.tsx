@@ -32,3 +32,4 @@ export const Login: FC<ILogin> = async ({code}) => {
     </div>
   );
 };
+  

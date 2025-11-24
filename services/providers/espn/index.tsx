@@ -28,11 +28,30 @@ espn.put('/toggle', async c => {
   if (!enabled) {
     await db.providers.updateAsync<IProvider, any>({name: 'espn'}, {$set: {enabled, tokens: {}}});
     removeEvents();
-
     return c.html(<></>);
   }
 
-  if ( await espnHandler.ispAccess() ) {
+  // --- Check if ESPN+ Unlimited is already enabled (it takes priority) ---
+  const espnPlusProvider = await db.providers.findOneAsync<{enabled: boolean}>({name: 'espnplus'});
+  if (espnPlusProvider?.enabled) {
+    // Even if user is trying to enable TVE, suppress linear channels — they're provided by ESPN+ Unlimited
+    await db.providers.updateAsync<IProvider, any>(
+      {name: 'espn'},
+      {$set: {enabled: true, tokens: {}, meta: {...meta, espn_free: true}}},
+    );
+    scheduleEvents();
+
+    return c.html(
+      <ESPNBody enabled={true} tokens={{}} channels={[]} meta={{...meta, espn_free: true}} />,
+      200,
+      {
+        'HX-Trigger': `{"HXToast":{"type":"info","body":"Linear channels are provided by active ESPN+ Unlimited subscription"}}`,
+      },
+    );
+  }
+
+  // --- Normal flow: no ESPN+ Unlimited, proceed with ISP or TVE ---
+  if (await espnHandler.ispAccess()) {
     await db.providers.updateAsync<IProvider, any>(
       {name: 'espn'},
       {
@@ -41,15 +60,13 @@ espn.put('/toggle', async c => {
           tokens: {},
           meta: {
             ...meta,
-            espn3: enabled,
+            espn3: true,
             espn3isp: true,
             espn_free: true,
           },
         },
       },
     );
-
-    // Kickoff event scheduler
     scheduleEvents();
 
     return c.html(<Login />, 200, {
@@ -69,16 +86,12 @@ espn.put('/toggle', async c => {
         },
       },
     );
-
-    // Kickoff event scheduler
     scheduleEvents();
 
     return c.html(<Login />, 200, {
       'HX-Trigger': `{"HXToast":{"type":"success","body":"Successfully enabled @ESPN (free)"}}`,
     });
   }
-
-  return c.html(<Login />);
 });
 
 espn.get('/tve-login/:code', async c => {

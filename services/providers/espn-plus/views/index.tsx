@@ -17,7 +17,7 @@ export const ESPNPlus: FC = async () => {
         <div class="grid-container">
           <h4>
             <span>
-              ESPN Account
+              ESPN Account (ESPN Unlimited Linear Channel Login)
               <span class="warning-red" data-tooltip="Formerly ESPN+, no longer working" data-placement="right">
                 **
               </span>
