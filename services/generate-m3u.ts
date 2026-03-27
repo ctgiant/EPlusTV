@@ -1,7 +1,10 @@
 import _ from 'lodash';
+import moment from 'moment-timezone';
 
+import {db} from './database';
 import {CHANNELS} from './channels';
 import {getLinearStartChannel, getNumberOfChannels, getStartChannel} from './misc-db-service';
+import {IEntry} from './shared-interfaces';
 
 export const generateM3u = async (uri: string, linear = false, excludeGracenote = false): Promise<string> => {
   const startChannel = await getStartChannel();
@@ -49,6 +52,48 @@ export const generateM3u = async (uri: string, linear = false, excludeGracenote 
       m3uFile = `${m3uFile}\n${uri}/channels/${channelNum}.m3u8\n`;
     });
   }
+
+  return m3uFile;
+};
+
+export const generateEventChannelsM3u = async (uri: string): Promise<string> => {
+  const now = Date.now();
+
+  // Only include events that haven't ended yet
+  const entries = await db.entries
+    .findAsync<IEntry>({
+      channel: {$exists: true},
+      linear: {$exists: false},
+      end: {$gt: now},
+    })
+    .sort({start: 1});
+
+  let m3uFile = '#EXTM3U';
+
+  entries.forEach((entry, i) => {
+    const channelNum = i + 1;
+    const time = moment(entry.start).tz('America/New_York').format('MMM D hh:mm A [ET]');
+    const league = entry.sport || entry.network;
+
+    // Normalize MLB-style "Team A @ Team B - HOME" name suffix into a feed label
+    let baseName = entry.name;
+    let feedLabel = entry.feed || null;
+    if (!feedLabel) {
+      const homeAwayMatch = baseName.match(/\s+-\s+(HOME|AWAY)$/i);
+      if (homeAwayMatch) {
+        baseName = baseName.slice(0, homeAwayMatch.index);
+        feedLabel = homeAwayMatch[1].charAt(0).toUpperCase() + homeAwayMatch[1].slice(1).toLowerCase() + ' Feed';
+      }
+    }
+
+    const rawName = feedLabel ? `${baseName} (${feedLabel})` : baseName;
+    const eventName = rawName.replace(/\bat\b/gi, '@');
+
+    const displayName = `${league}: ${eventName} @ ${time} (${entry.network})`;
+
+    m3uFile = `${m3uFile}\n#EXTINF:0 tvg-id="${entry.id}" channel-number="${channelNum}" tvg-chno="${channelNum}" tvg-name="${displayName}" tvg-logo="${entry.image}" group-title="EPlusTV", ${displayName}`;
+    m3uFile = `${m3uFile}\n${uri}/channels/${entry.channel}.m3u8\n`;
+  });
 
   return m3uFile;
 };

@@ -10,7 +10,7 @@ import axios from 'axios';
 import fs from 'fs';
 import {createServer} from 'node:https';
 
-import {generateM3u} from './services/generate-m3u';
+import {generateM3u, generateEventChannelsM3u} from './services/generate-m3u';
 import {initDirectories} from './services/init-directories';
 import {generateXml} from './services/generate-xmltv';
 import {launchChannel} from './services/launch-channel';
@@ -433,6 +433,16 @@ app.get('/channels.m3u', async c => {
   return c.body(m3uFile, 200, {
     'Content-Type': 'application/x-mpegurl',
   });
+});
+
+app.get('/event-channels.m3u', async c => {
+  const m3uFile = await generateEventChannelsM3u(getUri(c));
+
+  if (!m3uFile) {
+    return notFound(c);
+  }
+
+  return c.body(m3uFile, 200, {'Content-Type': 'application/x-mpegurl'});
 });
 
 app.get('/linear-channels.m3u', async c => {

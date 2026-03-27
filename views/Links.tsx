@@ -12,6 +12,7 @@ export const Links: FC<ILinksProps> = async ({baseUrl}) => {
   const xmltvUrl = `${baseUrl}/xmltv.xml`;
   const linearXmltvUrl = `${baseUrl}/linear-xmltv.xml`;
   const channelsUrl = `${baseUrl}/channels.m3u`;
+  const eventChannelsUrl = `${baseUrl}/event-channels.m3u`;
   const linearChannelsUrl = `${baseUrl}/linear-channels.m3u`;
   const linearChannelsGc = `${baseUrl}/linear-channels.m3u?gracenote=include`;
   const linearChannelsNoGc = `${baseUrl}/linear-channels.m3u?gracenote=exclude`;
@@ -47,6 +48,15 @@ export const Links: FC<ILinksProps> = async ({baseUrl}) => {
             <td>
               <a href={channelsUrl} class="secondary" target="_blank">
                 {channelsUrl}
+              </a>
+            </td>
+          </tr>
+          <tr>
+            <td>Event Channel</td>
+            <td>One channel per scheduled event with details in the name, no accompanying EPG data</td>
+            <td>
+              <a href={eventChannelsUrl} class="secondary" target="_blank">
+                {eventChannelsUrl}
               </a>
             </td>
           </tr>
