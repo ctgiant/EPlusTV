@@ -545,9 +545,7 @@ class MLBHandler {
 
       await parseAirings(combinedEntries);
 
-      // temporarily disabled Big Inning scrape 2026-02-20
-      //const bigInningsEnabled = await this.checkMlbBigInningAccess();
-      const bigInningsEnabled = false;
+      const bigInningsEnabled = await this.checkMlbBigInningAccess();
 
       if (bigInningsEnabled) {
         const bigInnings = await this.getBigInnings();
@@ -717,18 +715,23 @@ class MLBHandler {
 
     try {
       const {data} = await axios.get(
-        'https://api.fubo.tv/gg/series/123881219/live-programs?limit=4&page=1&languages=en&countrySlugs=USA',
-      );
+        'https://watch.product.api.espn.com/api/product/v3/watchespn/web/catalog/ae4eb028-0af3-42e7-8965-9304c5817969?lang=en&features=continueWatching%2Csfb-all%2Cpbov7%2Chigh-volume-row%2Csc4u%2Cguide-menu-header%2Ccutl%2Cheader-quickserve%2Cautoplay%2Cwatch-web-redesign%2CimageRatio58x13%2CpromoTiles%2CopenAuthz%2Cvideo-header%2Cexplore-row%2Cbutton-service%2Cinline-header%2Cflagship&deviceBrand=web&streamMenu=true&headerBgImageWidth=1280&countryCode=US&entitlements=no&tz=UTC-0400&userab=espn_watch_for_you_web-392*watch-fy-a-1642', {
+        headers: {
+          'Accept': '*/*',
+          'Accept-Encoding': 'gzip, deflate, br, zstd',
+          'Origin': 'https://www.espn.com',
+          'Referer': 'https://www.espn.com/',
+          'User-Agent': userAgent,
+        },
+      });
 
-      data.data.forEach(e => {
-        e.airings.some(airingData => {
-          if (airingData.station.name == 'MLB Big Inning') {
-            const start = moment(airingData.accessRightsV2.live.startTime);
-            const end = moment(airingData.accessRightsV2.live.endTime);
+      data.page.buckets[0].contents.forEach(c => {
+        c.streams.some(s => {
+          const start = moment(c.utc);
+          const end = moment(c.utc).add(s.durationInSeconds, 'seconds');
 
-            bigInnings.push([start, end]);
-            return true;
-          }
+          bigInnings.push([start, end]);
+          return true;
         });
       });
 
