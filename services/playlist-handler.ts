@@ -299,7 +299,9 @@ export class PlaylistHandler {
         const fullKeyUrl = isRelativeUrl(key.uri)
           ? usesHostRoot(key.uri)
             ? convertHostUrl(key.uri, realManifestUrl)
-            : cleanUrl(`${realManifestUrl}${key.uri}`)
+            : this.network === 'foxone'
+              ? cleanUrl(`${createBaseUrl(realManifestUrl)}${key.uri}`)
+              : cleanUrl(`${realManifestUrl}${key.uri}`)
           : key.uri;
         
         const response = await axios.get<string>(fullKeyUrl, {
