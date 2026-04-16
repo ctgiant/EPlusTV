@@ -79,7 +79,44 @@ const CLIENT_SECRET = [
   '9',
 ].join('');
 
-const PLAYBACK_CLIENT_SECRET = '54aa1ab4-01c5-432e-807a-5c4b8f73058b';
+const PLAYBACK_CLIENT_SECRET = [
+  '5',
+  '4',
+  'a',
+  'a',
+  '1',
+  'a',
+  'b',
+  '4',
+  '-',
+  '0',
+  '1',
+  'c',
+  '5',
+  '-',
+  '4',
+  '3',
+  '2',
+  'e',
+  '-',
+  '8',
+  '0',
+  '7',
+  'a',
+  '-',
+  '5',
+  'c',
+  '4',
+  'b',
+  '8',
+  'f',
+  '7',
+  '3',
+  '0',
+  '5',
+  '8',
+  'b',
+].join('');
 
 const BASE_API_URL = ['https://', 'api.gothamsports.com', '/proxy'].join('');
 const BASE_ADOBE_URL = ['https://', 'api.auth', '.adobe.com', '/api/v1'].join('');
