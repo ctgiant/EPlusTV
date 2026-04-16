@@ -72,7 +72,7 @@ export const generateEventChannelsM3u = async (uri: string): Promise<string> => 
 
   entries.forEach((entry, i) => {
     const channelNum = i + 1;
-    const time = moment(entry.start).tz('America/New_York').format('MMM D hh:mm A [ET]');
+    const time = moment(entry.start).tz(moment.tz.guess()).format('MMM D hh:mm A z');
     const league = entry.sport || entry.network;
 
     // Normalize MLB-style "Team A @ Team B - HOME" name suffix into a feed label
