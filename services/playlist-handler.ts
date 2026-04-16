@@ -312,7 +312,7 @@ export class PlaylistHandler {
         const buffer = Buffer.from(response.data);
         const base64String = buffer.toString('base64');
 
-        updatedManifest = updatedManifest.replace(key.uri, base64String);
+        updatedManifest = updatedManifest.replace(key.uri, 'data:text/plain;base64,' + base64String);
       }
 
       this.playlist = updatedManifest;
