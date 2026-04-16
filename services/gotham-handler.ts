@@ -79,6 +79,8 @@ const CLIENT_SECRET = [
   '9',
 ].join('');
 
+const PLAYBACK_CLIENT_SECRET = '54aa1ab4-01c5-432e-807a-5c4b8f73058b';
+
 const BASE_API_URL = ['https://', 'api.gothamsports.com', '/proxy'].join('');
 const BASE_ADOBE_URL = ['https://', 'api.auth', '.adobe.com', '/api/v1'].join('');
 
@@ -435,6 +437,7 @@ class GothamHandler {
           delivery: 'streaming',
           deviceId: this.device_id,
           deviceName: 'web',
+          disableSsai: false,
           drm: 'fairplay',
           mediaFormat: 'hls',
           playbackMode: 'live',
@@ -450,7 +453,7 @@ class GothamHandler {
               'x-adobe-authorization': adobeMediaToken,
             }),
             'x-authorization': this.entitlement_token,
-            'x-client-id': 'game-gotham-androidtv',
+            'x-client-id': 'game-gotham-web',
             'x-device-id': deviceIdToken,
           },
         },
@@ -473,8 +476,8 @@ class GothamHandler {
 
       const params = new URLSearchParams({
         audience: 'edge-service',
-        client_id: 'android-ui-app',
-        client_secret: CLIENT_SECRET,
+        client_id: 'webclient-ui-app-game',
+        client_secret: PLAYBACK_CLIENT_SECRET,
         grant_type: 'client_credentials',
         scope: 'openid',
       });
@@ -761,7 +764,7 @@ class GothamHandler {
             'gg-rsn-id': this.appConfig.RSNid,
             'user-agent': okHttpUserAgent,
             'x-authorization': this.entitlement_token,
-            'x-client-id': 'game-gotham-androidtv',
+            'x-client-id': 'game-gotham-web',
           },
         },
       );
