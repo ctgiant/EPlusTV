@@ -753,7 +753,7 @@ public getStationMap = async (): Promise<typeof this.stationMap> => {
     const {meta} = await db.providers.findOneAsync<IProvider<any, IFoxOneMeta>>({name: 'foxone'});
     const {uhd} = meta;
 
-    const streamOrder = ['UHD/HDR', 'HD'];
+    const streamOrder = ['UHD/HDR', 'UHD/SDR', 'HD'];
 
     let resIndex = streamOrder.findIndex(i => i === getMaxRes(uhd ? 'UHD/HDR' : ''));
 
@@ -771,6 +771,8 @@ public getStationMap = async (): Promise<typeof this.stationMap> => {
       let deviceCapabilities: string;
       if (streamOrder[a] === 'UHD/HDR') {
         deviceCapabilities = 'color/HDR,maxRes/UHD';
+      } else if (streamOrder[a] === 'UHD/SDR') {
+        deviceCapabilities = 'color/SDR,maxRes/UHD';
       } else {
         deviceCapabilities = 'color/SDR,maxRes/HD';
       }
