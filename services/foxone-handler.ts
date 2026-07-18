@@ -303,6 +303,11 @@ class FoxOneHandler {
             name: 'Fox Live Now',
             tmsId: '119219',
           },
+          {
+            enabled: false,
+            id: 'FOX Sports',
+            name: 'Fox 4k',
+          },
         ],
         meta: {
           only4k: useFoxOneOnly4k,
@@ -328,7 +333,20 @@ class FoxOneHandler {
       console.log('Using MAX_RESOLUTION variable is no longer needed. Please use the UI going forward');
     }
 
-    const {enabled} = await db.providers.findOneAsync<IProvider<TFoxOneTokens, IFoxOneMeta>>({name: 'foxone'});
+    const {enabled, linear_channels} = await db.providers.findOneAsync<IProvider<TFoxOneTokens, IFoxOneMeta>>({name: 'foxone'});
+
+    // Backfill FSD channel into existing installs (runs regardless of enabled state)
+    if (!linear_channels?.some(c => c.id === 'FOX Sports')) {
+      linear_channels.push({
+        enabled: false,
+        id: 'FOX Sports',
+        name: 'Fox 4k',
+      });
+      await db.providers.updateAsync<IProvider, any>(
+        {name: 'foxone'},
+        {$set: {linear_channels}},
+      );
+    }
 
     if (!enabled) {
       return;
@@ -753,7 +771,7 @@ public getStationMap = async (): Promise<typeof this.stationMap> => {
     const {meta} = await db.providers.findOneAsync<IProvider<any, IFoxOneMeta>>({name: 'foxone'});
     const {uhd} = meta;
 
-    const streamOrder = ['UHD/HDR', 'HD'];
+    const streamOrder = ['UHD/HDR', 'UHD/SDR', 'HD'];
 
     let resIndex = streamOrder.findIndex(i => i === getMaxRes(uhd ? 'UHD/HDR' : ''));
 
@@ -771,6 +789,8 @@ public getStationMap = async (): Promise<typeof this.stationMap> => {
       let deviceCapabilities: string;
       if (streamOrder[a] === 'UHD/HDR') {
         deviceCapabilities = 'color/HDR,maxRes/UHD';
+      } else if (streamOrder[a] === 'UHD/SDR') {
+        deviceCapabilities = 'color/SDR,maxRes/UHD';
       } else {
         deviceCapabilities = 'color/SDR,maxRes/HD';
       }

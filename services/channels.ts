@@ -414,7 +414,14 @@ export const CHANNELS = {
         stationId: '119219',
         tvgName: 'LIVENOW',
         provider: 'foxone',
-      },                     
+      },
+      123: {
+        checkChannelEnabled: () => checkChannelEnabled('foxone', 'FOX Sports'),
+        id: 'FOX Sports',
+        logo: 'https://tmsimg.fancybits.co/assets/GNLZZGG0029CYRH.png?w=360&h=270',
+        name: 'Fox 4k',
+        provider: 'foxone',
+      },                       
     };
   },
 };
