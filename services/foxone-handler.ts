@@ -303,6 +303,11 @@ class FoxOneHandler {
             name: 'Fox Live Now',
             tmsId: '119219',
           },
+          {
+            enabled: false,
+            id: 'FOX Sports',
+            name: 'Fox 4k',
+          },
         ],
         meta: {
           only4k: useFoxOneOnly4k,
@@ -328,7 +333,20 @@ class FoxOneHandler {
       console.log('Using MAX_RESOLUTION variable is no longer needed. Please use the UI going forward');
     }
 
-    const {enabled} = await db.providers.findOneAsync<IProvider<TFoxOneTokens, IFoxOneMeta>>({name: 'foxone'});
+    const {enabled, linear_channels} = await db.providers.findOneAsync<IProvider<TFoxOneTokens, IFoxOneMeta>>({name: 'foxone'});
+
+    // Backfill FSD channel into existing installs (runs regardless of enabled state)
+    if (!linear_channels?.some(c => c.id === 'FOX Sports')) {
+      linear_channels.push({
+        enabled: false,
+        id: 'FOX Sports',
+        name: 'Fox 4k',
+      });
+      await db.providers.updateAsync<IProvider, any>(
+        {name: 'foxone'},
+        {$set: {linear_channels}},
+      );
+    }
 
     if (!enabled) {
       return;
